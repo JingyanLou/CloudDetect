@@ -1,0 +1,87 @@
+Step 1: (All nodes) Install Docker
+$sudo apt update
+$sudo apt install -y apt-transport-https ca-certificates curl gnupg software-properties-common lsb-release
+$ sudo mkdir -m 0755 -p /etc/apt/keyrings
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+$ sudo chmod a+r /etc/apt/keyrings/docker.gpg
+(downloading public key for docker repository)
+
+$ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg]
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >
+/dev/null
+(adding docker repository)
+
+Step 2: (All nodes) Install cri-dockerd adapter Since version 1.20, Kubernetes discontinued supporting Docker as a container runtime. Dockershim support was completely removed from version 1.24. Hence, an additional adapter is required to make it work.
+ $ wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.10/cri-dockerd_0.3.10.3-0.ubuntu-jammy_amd64.deb
+ $ sudo dpkg -i cri-dockerd_0.3.10.3-0.ubuntu-jammy_amd64.deb
+
+Step 3: (All nodes) Installing kubeadm, kubelet and kubectl
+ $ sudo apt update && sudo apt-get install -y apt-transport-https ca-certificates curl
+
+Download the Google public signing key:
+$ sudo curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+Add K8s repository:
+Step 4: Open ports with iptables (Oracle Cloud)
+ Oracle-provided images have strict traffic control for security reasons. In addition to the VCN security list, you also need to edit the iptables.
+ (Update your iptables only if you are using Oracle, i.e., you dont need to do this step when using Nectar)
+
+$ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+$ sudo apt update && sudo apt-get install -y kubelet kubeadm kubectl
+
+$ sudo apt-mark hold kubelet kubeadm kubectl
+
+$ kubeadm version
+
+$ sudo swapoff -a
+
+$ sudo nano /etc/iptables/rules.v4
+
+Add the following lines after the SSH iptable policy(--dport 22).
+
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 6443 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW --match multiport --dport 10250,10257,10259 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 30000:32767 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 6783 -j ACCEPT
+-A INPUT -p udp -m udp --dport 6783 -j ACCEPT
+-A INPUT -p udp -m udp --dport 6784 -j ACCEPT
+
+Save and exit nano, then run the following command
+
+$ sudo iptables-restore < /etc/iptables/rules.v4
+
+Step 5: Create a cluster with Kubeadm
+After initialisation, on master node only:
+Now you can join your worker nodes with the provided join command, then check if the nodes are ready. Please note the command has to be executed with sudo and specify which cri-socket to connect.
+
+(worker nodes) $ sudo <JOIN_COMMAND> --cri-socket=unix:///var/run/cri-dockerd.sock (master node) $ kubectl get nodes
+
+Finally, you need to install a networking model for your Kubernetes cluster. Kubernetes supports different networking models. Below is the command to install Weave Net, one of the most mature networking models for Kubernetes:
+
+Step 6: For the 2 worker nodes, after provisioning, you should remove the public IP addresses for security reasons.
+(note: if the cluster is screwed up during step 5-6, you can run the following command to reset the cluster and startover:
+
+(Use this command only if you need to reset and start over)
+$ sudo kubeadm reset --cri-socket=unix:///var/run/cri-dockerd.sock
+
+Task 4: Working with Services
+Let’s start by checking if the nginx server is working.
+$ curl <pod-ipaddress>:80
+
+Optionally, you can also use port-forwarding from the master node:
+$ kubectl port-forward <pod-name> 8080:80 --namespace=<your-namespace> &
+$ curl localhost:8080
+
+Execute the file:
+$ kubectl apply -f my-service.yml --namespace=<your-namespace>
+
+Get information on the created service:
+$ kubectl get svc --namespace=<your-namespace> -o wide
+
+Now try the curl command with your service IP and the port from your YAML file description:
+$ curl <service-ip-address>:8080
+
+If the service is created successfully, its output should be the same as the HTML content from the direct connection to the pod.
+
+Now, you can add port 30003 to the security group and try to access the service with your browser: http://<your-public-ip-address>:30003

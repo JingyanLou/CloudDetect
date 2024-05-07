@@ -1,0 +1,30 @@
+#python version
+FROM python:3.11.5-slim
+
+#set working folder to app
+WORKDIR /app
+
+# copy requirement
+COPY requirements.txt .
+
+#install python dependency
+RUN pip install --no-cache-dir -r requirements.txt
+
+#install opencv system depencey and remove useless file, OpenAI. “ChatGPT model response,” [2024].
+RUN apt-get update && \
+    apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the Flask application and also Detection code
+COPY object_detection.py /app
+
+# Copy yolo to app/yolo_tiny_configs
+COPY yolo_tiny_configs /app/yolo_tiny_configs
+
+# Expose the port 5001 for flask server
+EXPOSE 5001
+
+# run python server.py when build container
+CMD ["python", "object_detection.py"]

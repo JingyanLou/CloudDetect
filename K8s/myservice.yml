@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jingyan-service
+  namespace: jingyan
+spec:
+  type: NodePort #type used for thi service
+  selector:
+    app: flask-app
+  ports:
+    - protocol: TCP
+      port: 8080 # external 30003 to 8080
+      targetPort: 5001 # 8080 forward to 5001 (flask)
+      nodePort: 30003  #external to 30003
