@@ -11,7 +11,7 @@ The project:ObjectDetection a Cloud-based Web-service designed to perform real-t
 - Python
 
 # System Diagram
-[new.drawio.pdf](https://github.com/user-attachments/files/16067750/new.drawio.pdf)
+![WechatIMG205](https://github.com/JingyanLou/ObjectDetection/assets/92469426/cdd30779-770f-451e-805e-ab3e164f4dd9)
 
 
 # URL and Endpoint
