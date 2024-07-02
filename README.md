@@ -10,6 +10,10 @@ The project:ObjectDetection a Cloud-based Web-service designed to perform real-t
 - Locust
 - Python
 
+# System Diagram
+[new.drawio.pdf](https://github.com/user-attachments/files/16067750/new.drawio.pdf)
+
+
 # URL and Endpoint
 - Video URL : https://drive.google.com/file/d/1BgaRFSjAdctEN3qE_9pSsLCLlNSG46Rd/view?usp=sharing
 - Service Endpoint: NA
