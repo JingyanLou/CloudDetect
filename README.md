@@ -20,5 +20,4 @@
 - Python
 
 # URL and Endpoint
-- Demo Video URL : https://drive.google.com/file/d/1BgaRFSjAdctEN3qE_9pSsLCLlNSG46Rd/view?usp=sharing
 - Service Endpoint: NA
